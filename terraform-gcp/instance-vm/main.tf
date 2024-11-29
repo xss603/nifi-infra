@@ -14,13 +14,64 @@
  * limitations under the License.
  */
 
+module "vpc" {
+    source  = "terraform-google-modules/network/google"
+    version = "~> 9.3"
+
+    project_id   = var.project_id
+    network_name = "nifi-vpc"
+    routing_mode = "GLOBAL"
+
+    subnets = [
+        {
+            subnet_name           = "nifi-subnet-01"
+            subnet_ip             = "10.10.10.0/24"
+            subnet_region         = var.region
+        },
+  
+    ]
+    ingress_rules = [
+    {
+      name        = "nifi-ingress-rule"
+      description = "Allow NiFi web UI access+ssh+https"
+      priority    = 1000
+      source_ranges = ["0.0.0.0/0"]
+      target_tags   = ["nifi-instance"]
+      allow = [
+        {
+          protocol = "tcp"
+          ports    = ["8080","8443","22"]
+        }
+      ]
+    },
+  ]
+  egress_rules = [
+        {
+      name        = "nifi-egress-rule"
+      description = "Allow outbound traffic from NiFi"
+      priority    = 1000
+      target_tags   = ["nifi-instance"]
+      destination_ranges = ["0.0.0.0/0"]
+      allow = [
+        {
+          protocol = "tcp"
+        },
+        {
+          protocol = "udp"
+        }
+      ]
+    }
+  ]
+}
+
 module "instance_template" {
   source  = "terraform-google-modules/vm/google//modules/instance_template"
   version = "~> 12.0"
-
+  source_image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
+  machine_type= "n1-standard-1"
   region             = var.region
   project_id         = var.project_id
-  subnetwork         = var.subnetwork
+  subnetwork         = "nifi-subnet-01"
   subnetwork_project = var.project_id
   service_account    = var.service_account
 }
