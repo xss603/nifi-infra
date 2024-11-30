@@ -16,10 +16,12 @@
   roles:
     - zeevo.zookeeper
 
-- name: nifi
+- name: install nifi
   hosts: nifi
   become: true
   vars:
-    nifi_user: admin
+    nifi_user: nifi
   roles:
-    - zeevo.nifi
+    - geerlingguy.java
+    - geerlingguy.docker
+    - ../roles/nifi

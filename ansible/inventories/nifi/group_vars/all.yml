@@ -17,9 +17,9 @@ nifi_security_truststore_type: JKS
 nifi_cluster_is_node: true # Enable or disable clustered mode
 nifi_nodes:
 # Cluster members. Without this, NiFi nodes will not be able to communicate with eachother
-- dn: CN=nifi-devops-prd-01.domain.local, OU=NIFI
-- dn: CN=nifi-devops-prd-02.domain.local, OU=NIFI
-- dn: CN=nifi-devops-prd-03.domain.local, OU=NIFI
+- dn: CN=nifi-01.domain.local, OU=NIFI
+- dn: CN=nifi-02.domain.local, OU=NIFI
+- dn: CN=nifi-03.domain.local, OU=NIFI
 
 # Single user mode
 nifi_single_user_mode: false

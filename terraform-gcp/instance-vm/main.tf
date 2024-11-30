@@ -71,7 +71,7 @@ module "instance_template" {
   machine_type= "n1-standard-1"
   region             = var.region
   project_id         = var.project_id
-  subnetwork         = "nifi-subnet-01"
+  subnetwork         = var.subnetwork
   subnetwork_project = var.project_id
   service_account    = var.service_account
 }
@@ -85,7 +85,8 @@ module "compute_instance" {
   subnetwork          = var.subnetwork
   subnetwork_project  = var.project_id
   num_instances       = var.num_instances
-  hostname            = "instance-simple"
+  hostname            = "nifi"
+  add_hostname_suffix = true
   instance_template   = module.instance_template.self_link
   deletion_protection = false
 

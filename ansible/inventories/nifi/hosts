@@ -1,0 +1,4 @@
+[nifi]
+nifi-01 service_ip=X.X.X.X
+nifi-02 service_ip=X.X.X.X
+nifi-03 service_ip=X.X.X.X
