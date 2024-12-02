@@ -1,27 +1,9 @@
-# Playbook `nifi.yml`
-- name: docker
-  hosts: all
-  become: true
-  vars:
-    docker_users:
-      - admin # Should be the user that will run NiFi and Zookeeper
-  roles:
-    - zeevo.docker
-
-- name: zookeeper
-  hosts: zookeeper
-  become: true
-  vars:
-    zookeeper_user: admin
-  roles:
-    - zeevo.zookeeper
-
 - name: install nifi
   hosts: nifi
   become: true
   vars:
     nifi_user: nifi
   roles:
-    - geerlingguy.java
-    - geerlingguy.docker
+    #- geerlingguy.java
+    #- geerlingguy.docker
     - ../roles/nifi

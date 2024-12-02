@@ -1,37 +1,33 @@
+
+- name: Add a line to a file
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: |
+      nifi-01 34.77.4.18
+      nifi-02 146.148.9.63
+      nifi-03 35.187.94.191
+    create: yes
+    
 - name: Create nifi group
   group:
     name: "{{ nifi_group }}"
     state: present
-
+  tags:
+  - install
 - name: Create nifi user
   user:
     name: "{{ nifi_user }}"
     group: "{{ nifi_group }}"
-
-- name: Add nifi user to docker group
-  shell: usermod -aG docker {{ nifi_user }}
-  become: true
-
+  tags:
+  - install
 - name: Create directory for nifi
   file:
     path: "{{ nifi_home_dir }}"
     state: directory
     owner: "{{ nifi_user }}"
     group: "{{ nifi_group }}"
-
-- name: Create directory for nifi scripts
-  file:
-    path: "{{ nifi_home_dir }}/scripts"
-    state: directory
-    owner: "{{ nifi_user }}"
-    group: "{{ nifi_group }}"
-
-- name: Create directory for nifi certs
-  file:
-    path: "{{ nifi_certs_dir }}"
-    state: directory
-    owner: "{{ nifi_user }}"
-    group: "{{ nifi_group }}"
+  tags:
+  - install
 
 - name: Create nifi internals directories
   file:
@@ -40,7 +36,6 @@
     owner: "{{ nifi_user }}"
     group: "{{ nifi_group }}"
   loop:
-    - conf
     - content_repository
     - database_repository
     - flowfile_repository
@@ -48,56 +43,102 @@
     - provenance_repository
     - state
     - nar_extensions
+  tags:
+  - install
 
-- name: Add nifi docker compose
-  template:
-    src: docker-compose.yml.j2
-    dest: "{{ nifi_docker_compose }}"
+- name: Create nifi conf dir
+  file:
+    path: "{{ nifi_home_dir }}/{{ item }}"
+    state: directory
     owner: "{{ nifi_user }}"
     group: "{{ nifi_group }}"
+  loop:
+    - conf
+    - tls
+  tags:
+  - install
+  - config
+- name: remove old packages
+  become: true
+  shell: "rm -rf {{ nifi_home_dir  }}/nifi-*.zip"
 
-- name: Check if flow.json.gz exists
-  stat:
-    path: "{{ nifi_data_dir }}/conf/flow.json.gz"
-  register: flowjson
+- name: download packages nifi
+  become: true
+  shell: "cd {{ nifi_home_dir  }} &&  curl  https://dlcdn.apache.org/nifi/2.0.0/nifi-2.0.0-bin.zip -o nifi-2.0.0-bin.zip"
+- name: download packages nifi
+  become: true
+  shell: "cd {{ nifi_home_dir  }} &&  curl  https://dlcdn.apache.org/nifi/2.0.0/nifi-toolkit-2.0.0-bin.zip -o nifi-toolkit-2.0.0-bin.zip"
 
-- name: Add initial flow.json to tmp
-  when: not flowjson.stat.exists
-  template:
-    src: flow.json.j2
-    dest: "/tmp/flow.json"
+# wnload nifi: {{ nifi_version }}"
+# rue
+# uiltin.get_url:
+# { nifi_package_url }}"
+# {{ nifi_home_dir  }}/nifi-{{ nifi_version }}-bin.zip"
+# "{{ nifi_user }}"
+# "{{ nifi_group }}"
+# 
+# 
+# 
+# wnload nifi-toolkit: {{ nifi_version }}"
+# uiltin.get_url:
+# { nifi_package_url }}"
+# {{ nifi_home_dir  }}/nifi-toolkit-{{ nifi_version }}-bin.zip"
+# "{{ nifi_user }}"
+# "{{ nifi_group }}"
+# 
+# 
+
+- name: Inflate nifi zip
+  ansible.builtin.unarchive:
+    remote_src: yes
+    src: "/opt/nifi/nifi-2.0.0-bin.zip"
+    dest: "{{ nifi_home_dir  }}"
+    mode: 0750
     owner: "{{ nifi_user }}"
     group: "{{ nifi_group }}"
-
-- name: Gzip flow.json.gz and move to conf
-  when: not flowjson.stat.exists
-  shell: "gzip -f /tmp/flow.json && mv /tmp/flow.json.gz {{ nifi_data_dir }}/conf/flow.json.gz"
+  tags:
+  - install
+  - debug
+- name: Inflate nifi-toolkit zip
+  ansible.builtin.unarchive:
+    remote_src: yes
+    src: "{{ nifi_home_dir  }}/nifi-toolkit-{{ nifi_version }}-bin.zip"
+    dest: "{{ nifi_home_dir  }}"
+    mode: 0750
+    owner: "{{ nifi_user }}"
+    group: "{{ nifi_group }}"
+  tags:
+  - install
+  - debug
 
 - name: Add authorizations.xml
   template:
     src: authorizations.xml.j2
-    dest: "{{ nifi_data_dir }}/conf/authorizations.xml"
+    dest: "{{ nifi_home_dir }}/conf/authorizations.xml"
     owner: "{{ nifi_user }}"
     group: "{{ nifi_group }}"
-
+  tags:
+  - config
 - name: Add users.xml
   template:
     src: users.xml.j2
-    dest: "{{ nifi_data_dir }}/conf/users.xml"
+    dest: "{{ nifi_home_dir }}/conf/users.xml"
     owner: "{{ nifi_user }}"
     group: "{{ nifi_group }}"
-
+  tags:
+  - config
 - name: Add authorizers.xml
   template:
     src: authorizers.xml.j2
-    dest: "{{ nifi_data_dir }}/conf/authorizers.xml"
+    dest: "{{ nifi_home_dir }}/conf/authorizers.xml"
     owner: "{{ nifi_user }}"
     group: "{{ nifi_group }}"
-
+  tags:
+  - config
 - name: Add conf internals
   template:
     src: "{{ item.0 }}"
-    dest: "{{ nifi_data_dir }}/conf/{{ item.1 }}"
+    dest: "{{ nifi_home_dir }}/conf/{{ item.1 }}"
     owner: "{{ nifi_user }}"
     group: "{{ nifi_group }}"
   loop:
@@ -106,92 +147,5 @@
     - ["login-identity-providers.xml.j2", "login-identity-providers.xml"]
     - ["state-management.xml.j2", "state-management.xml"]
     - ["nifi.properties.j2", "nifi.properties"]
-
-- name: Make tmp cert dir
-  file:
-    path: /tmp/ansible-nifi-certs
-    state: directory
-
-- name: Copy tmp certs
-  loop: "{{ nifi_users + nifi_additional_certs }}"
-  copy:
-    src: "{{ item.cert }}"
-    dest: "/tmp/ansible-nifi-certs/{{ item.cert }}"
-
-- name: Copy make_cert script
-  loop: "{{ nifi_users }}"
-  copy:
-    src: make_cert.sh
-    dest: "{{ nifi_home_dir }}/scripts/make_cert.sh"
-
-- name: Create truststore and keystore
-  shell: "docker run --user root -v {{ nifi_home_dir }}/nifi_certs:/opt/certs apache/nifi-toolkit:latest tls-toolkit standalone -O --subjectAlternativeNames {{ nifi_name }},{{ nifi_subject_alternative_names | join(',') }} -o /opt/certs -n {{ nifi_name }} -P {{ nifi_security_truststore_password }} -K {{ nifi_security_keystore_password }} -S {{ nifi_security_keystore_password }}"
-  when: nifi_auto_create_stores
-
-- name: Copy truststore
-  copy:
-    src: "{{ nifi_truststore }}"
-    dest: "{{ nifi_certs_dir }}/truststore.jks"
-
-- name: Copy keystore
-  copy:
-    src: "{{ nifi_keystore }}"
-    dest: "{{ nifi_certs_dir }}/keystore.jks"
-
-- name: Change permissions on /remote/file/path to ansible:user so we can write to it
-  file:
-    path: "{{ nifi_home_dir }}/nifi_certs"
-    recurse: true
-    owner: "{{ nifi_user }}"
-    group: "{{ nifi_group }}"
-
-- name: Add users to truststore
-  loop: "{{ nifi_users + nifi_additional_certs }}"
-  shell: "docker run -v /tmp/ansible-nifi-certs:/tmp/ansible-nifi-certs -v {{ nifi_certs_dir }}:/opt/certs openjdk keytool -noprompt -import -file /tmp/ansible-nifi-certs/{{ item.cert }} -alias {{ item.alias }} -keystore /opt/certs/truststore.jks -storepass {{ nifi_security_truststore_password }}"
-  ignore_errors: true
-
-- name: Create nifi network
-  shell: "docker network create {{ nifi_network }} || true"
-  ignore_errors: true
-
-- name: Stop nifi
-  shell: "docker compose -f {{ nifi_docker_compose }} down"
-  ignore_errors: true
-
-- name: Start nifi
-  shell: "docker compose -f {{ nifi_docker_compose }} up -d --remove-orphans"
-
-- name: Add backup.sh
-  template:
-    src: backup.sh.j2
-    dest: "{{ nifi_home_dir }}/backup.sh"
-    owner: "{{ nifi_user }}"
-    group: "{{ nifi_group }}"
-
-- name: Add restore.sh
-  template:
-    src: restore.sh.j2
-    dest: "{{ nifi_home_dir }}/restore.sh"
-    owner: "{{ nifi_user }}"
-    group: "{{ nifi_group }}"
-
-- name: Add get_shell
-  template:
-    src: get_shell.sh.j2
-    dest: "{{ nifi_home_dir }}/get_shell.sh"
-    owner: "{{ nifi_user }}"
-    group: "{{ nifi_group }}"
-
-- name: Add view_keystore
-  template:
-    src: view_keystore.sh.j2
-    dest: "{{ nifi_home_dir }}/view_keystore.sh"
-    owner: "{{ nifi_user }}"
-    group: "{{ nifi_group }}"
-
-- name: Add view_truststore
-  template:
-    src: view_truststore.sh.j2
-    dest: "{{ nifi_home_dir }}/view_truststore.sh"
-    owner: "{{ nifi_user }}"
-    group: "{{ nifi_group }}"
+  tags:
+  - config

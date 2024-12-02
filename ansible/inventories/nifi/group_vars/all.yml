@@ -1,10 +1,12 @@
 # Common variables
 nifi_name: nifi # Should be changed to your NiFi's FQDN
 nifi_user: nifi # This user MUST have UID 1000
-nifi_image: apache/nifi:2.0.0
-nifi_home_dir: /home/nifi # NiFi's will store all of its data here by default
+nifi_version: 2.0.0
+nifi_home_dir: /opt/nifi # NiFi's will store all of its data here by default
+nifi_data_dir: /opt/nifi/current
 nifi_nar_extensions_dir: /data/nar_extensions # Custom NAR files
-
+nifi_package_url: "https://www.apache.org/dyn/closer.lua?path=/nifi/{{ nifi_version }}/nifi-{{ nifi_version }}-bin.zip"
+nifi_toolkit_packe_url: "https://www.apache.org/dyn/closer.lua?path=/nifi/{{ nifi_version }}/nifi-toolkit-{{ nifi_version }}-bin.zip"
 # Security
 nifi_keystore: keystore.jks # Filename of your keystore on the Host machine
 nifi_truststore: truststore.jks # Filename of your truststore on the Host machine
@@ -12,7 +14,7 @@ nifi_security_keystore_password: keystorepass
 nifi_security_keystore_type: JKS
 nifi_security_truststore_password: truststorepass
 nifi_security_truststore_type: JKS
-
+nifi_web_https_host: "{{ inventory_hostname }}"
 # Cluster mode
 nifi_cluster_is_node: true # Enable or disable clustered mode
 nifi_nodes:

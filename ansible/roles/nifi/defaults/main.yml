@@ -16,9 +16,9 @@ nifi_keystore: keystore.jks
 
 # Cluster
 nifi_cluster_address: "{{ nifi_name }}"
-nifi_cluster_is_node: false
+nifi_cluster_is_node: true
 nifi_cluster_node_protocol_port: 8082
-nifi_zookeeper_connect_string: zookeeper:2181
+nifi_zookeeper_connect_string: nifi-01:2181,nifi-02:2181,nifi-03:2181
 nifi_cluster_flow_election_wait_time: 1 min
 
 # Web
@@ -52,10 +52,10 @@ nifi_nodes:
 
 # Security
 nifi_security_keystore_password: keystorepass
-nifi_security_keystore: /opt/certs/keystore.jks
+nifi_security_keystore: /opt/nifi/tls/keystore.jks
 nifi_security_keystore_type: JKS
 nifi_security_truststore_password: truststorepass
-nifi_security_truststore: /opt/certs/truststore.jks
+nifi_security_truststore: /opt/nifi/tls/truststore.jks
 nifi_security_truststore_type: JKS
 nifi_sensitive_props_key: my-random-string
 

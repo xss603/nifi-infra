@@ -1,0 +1,17 @@
+Host nifi-01
+  StrictHostKeyChecking no
+  HostName 34.77.4.18
+  User ayoub
+  IdentityFile  ~/.ssh/id_rsa
+
+Host nifi-02
+  StrictHostKeyChecking no
+  HostName 146.148.9.63
+  User ayoub
+  IdentityFile  ~/.ssh/id_rsa
+
+Host nifi-03
+  StrictHostKeyChecking no
+  HostName 35.187.94.191
+  User ayoub
+  IdentityFile  ~/.ssh/id_rsa
