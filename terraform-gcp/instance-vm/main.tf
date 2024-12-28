@@ -197,7 +197,7 @@ resource "google_compute_instance_group_manager" "nifi_mig" {
   zone                = var.zone
   base_instance_name  = "nifi-instance"
   target_size         = 3
-
+  target_pools = [ google_compute_target_pool.nifi_pool ]
   version {
     instance_template = google_compute_instance_template.nifi_template.self_link
     name              = "v1" # Optional version name
@@ -237,7 +237,7 @@ module "gce-lb-http" {
       groups = [
         {
           # Each node pool instance group should be added to the backend.
-          group                        = google_compute_region_instance_group_manager.nifi-mig.self_link
+          group                        = google_compute_instance_group_manager.nifi-mig.self_link
         },
       ]
 
