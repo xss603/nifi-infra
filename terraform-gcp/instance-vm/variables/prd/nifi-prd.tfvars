@@ -12,10 +12,19 @@ network_tier = "PREMIUM"                      # Network tier (PREMIUM or STANDAR
 
 # Compute instance settings
 num_instances = 3                             # Number of instances to create
-
+nifi_machine_type="e2-standard"
+spark_machine_type="e2-standard"
 # Service account
-service_account = {
+service_account_nifi = {
   email  = "nifi-vms@groovy-footing-326602.iam.gserviceaccount.com" # Service account email
+  scopes = [
+    "https://www.googleapis.com/auth/cloud-platform",              # Add required scopes
+    "https://www.googleapis.com/auth/compute"
+  ]
+}
+
+service_account_spark = {
+  email  = "spark-vms@groovy-footing-326602.iam.gserviceaccount.com" # Service account email
   scopes = [
     "https://www.googleapis.com/auth/cloud-platform",              # Add required scopes
     "https://www.googleapis.com/auth/compute"
@@ -24,6 +33,6 @@ service_account = {
 
 
 
-
+tcp_port=1234
 
 

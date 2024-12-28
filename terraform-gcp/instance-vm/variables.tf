@@ -51,11 +51,41 @@ variable "network_tier" {
   default     = "PREMIUM"
 }
 
-variable "service_account" {
+variable "service_account_nifi" {
   default = null
   type = object({
     email  = string,
     scopes = set(string)
   })
   description = "Service account to attach to the instance. See https://www.terraform.io/docs/providers/google/r/compute_instance_template#service_account."
+}
+variable "service_account_spark" {
+  default = null
+  type = object({
+    email  = string,
+    scopes = set(string)
+  })
+  description = "Service account to attach to the instance. See https://www.terraform.io/docs/providers/google/r/compute_instance_template#service_account."
+}
+
+variable "nifi_machine_type" {
+  
+}
+variable "spark_machine_type" {
+  
+}
+
+variable "tcp_port" {
+  
+}
+variable "service_port_http" {
+  
+}
+
+variable "service_port_name_http" {
+  
+}
+
+variable "backend" {
+  
 }
